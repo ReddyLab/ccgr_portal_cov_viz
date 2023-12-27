@@ -47,11 +47,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "cov_viz_ds"
+version = "0.4.0"
+source = "git+https://github.com/ReddyLab/ccgr_portal_cov_viz?rev=764e3d13cec0bcca17efa928a0a4a0775ac203da#764e3d13cec0bcca17efa928a0a4a0775ac203da"
+dependencies = [
+ "bincode",
+ "roaring",
+ "rustc-hash",
+ "serde",
+]
+
+[[package]]
 name = "cov_viz_manifest"
 version = "0.3.2"
 dependencies = [
  "bincode",
- "cov_viz_ds",
+ "cov_viz_ds 0.4.0 (git+https://github.com/ReddyLab/ccgr_portal_cov_viz?rev=764e3d13cec0bcca17efa928a0a4a0775ac203da)",
  "exp_viz",
  "rustc-hash",
  "serde",
@@ -99,11 +110,11 @@ checksum = "a26ae43d7bcc3b814de94796a5e736d4029efb0ee900c12e2d54c993ad1a1e07"
 
 [[package]]
 name = "exp_viz"
-version = "0.3.1"
-source = "git+https://github.com/ReddyLab/exp_viz?rev=a66cadd178a68d0143e8d1e70ce881b4d26e1caa#a66cadd178a68d0143e8d1e70ce881b4d26e1caa"
+version = "0.3.3"
+source = "git+https://github.com/ReddyLab/ccgr_portal_cov_viz?rev=764e3d13cec0bcca17efa928a0a4a0775ac203da#764e3d13cec0bcca17efa928a0a4a0775ac203da"
 dependencies = [
  "bincode",
- "cov_viz_ds",
+ "cov_viz_ds 0.4.0 (git+https://github.com/ReddyLab/cov_viz_ds?rev=0c58442bbef49acecb7ab2b5d7e2c150adaa61b5)",
  "rayon",
  "roaring",
  "rustc-hash",
