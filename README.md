@@ -7,4 +7,8 @@ A repository for libraries and applications related to generating experiment cov
 
 The only part that isn't here is the library that wraps exp_viz for django to use. That is in [the portal's repository](https://github.com/ReddyLab/cegs-portal/tree/main/extensions/exp_viz)
 
+Even though this is a monorepo, changes still have to be commited in "dependency order". So, when making changes across multiple libraries/apps
+commit cov_viz_ds changes first (it has no dependencies), then update cov_viz/exp_viz to use the cov_viz_ds commit's hash (they are only dependent on
+cov_viz_ds), and so on.
+
 Additionally, an app for testing code changes, filter_viz_test, is included.
