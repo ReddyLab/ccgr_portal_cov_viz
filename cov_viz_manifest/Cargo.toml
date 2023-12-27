@@ -9,7 +9,7 @@ edition = "2021"
 bincode = "1.3.3"
 cov_viz_ds = { git = "https://github.com/ReddyLab/ccgr_portal_cov_viz", rev = "764e3d13cec0bcca17efa928a0a4a0775ac203da" }
 # cov_viz_ds = { path = "../cov_viz_ds" } # For working with a local copy during development
-exp_viz = { git = "https://github.com/ReddyLab/ccgr_portal_cov_viz", rev = "764e3d13cec0bcca17efa928a0a4a0775ac203da" }
+exp_viz = { git = "https://github.com/ReddyLab/ccgr_portal_cov_viz", rev = "d724053d980ad97dcb8a2de5a2f29f574def7730" }
 # exp_viz = { path = "../exp_viz" }                      # For working with a local copy during development
 rustc-hash = "1.1.0"
 serde = { version = "1.0.137", features = ["derive"] }
