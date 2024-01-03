@@ -277,6 +277,18 @@ impl ExperimentFeatureData {
         }
     }
 
+    pub fn intersection(mut self, other: &Self) -> Self {
+        self.sources &= &other.sources;
+        self.targets &= &other.targets;
+        self
+    }
+
+    pub fn union(mut self, other: &Self) -> Self {
+        self.sources |= &other.sources;
+        self.targets |= &other.targets;
+        self
+    }
+
     // Uncomment if needed. This can be useful for debugging
     // pub fn print_chroms(&self) {
     //     for chrom in &self.chromosomes {
