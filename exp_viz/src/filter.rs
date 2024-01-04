@@ -181,7 +181,7 @@ fn gen_filtered_data(
 pub fn filter_coverage_data(
     filters: &Filter,
     data: &CoverageData,
-    included_features: &Option<ExperimentFeatureData>,
+    included_features: Option<&ExperimentFeatureData>,
 ) -> FilteredData {
     let bucket_size = data.bucket_size;
     let feature_buckets = &data.feature_buckets;
