@@ -277,13 +277,13 @@ impl ExperimentFeatureData {
         }
     }
 
-    pub fn intersection(mut self, other: &Self) -> Self {
+    pub fn intersection(&mut self, other: &Self) -> &Self {
         self.sources &= &other.sources;
         self.targets &= &other.targets;
         self
     }
 
-    pub fn union(mut self, other: &Self) -> Self {
+    pub fn union(&mut self, other: &Self) -> &Self {
         self.sources |= &other.sources;
         self.targets |= &other.targets;
         self
