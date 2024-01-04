@@ -38,7 +38,7 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 [[package]]
 name = "cov_viz_ds"
 version = "0.4.1"
-source = "git+https://github.com/ReddyLab/ccgr_portal_cov_viz?rev=74c3c8092112b7a8786a15aa450c93e9686a42cf#74c3c8092112b7a8786a15aa450c93e9686a42cf"
+source = "git+https://github.com/ReddyLab/ccgr_portal_cov_viz?rev=826fb4f5feb40d6f674ed2fef4613097cff7d30d#826fb4f5feb40d6f674ed2fef4613097cff7d30d"
 dependencies = [
  "bincode",
  "roaring",
