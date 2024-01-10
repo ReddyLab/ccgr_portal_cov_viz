@@ -15,6 +15,7 @@ pub struct ObservationData {
     // categorical facet values
     pub facet_value_ids: Vec<DbID>,
     pub source_id: DbID,
+    pub assoc_source_id: DbID,
     pub target_id: Option<DbID>,
     pub effect_size: f32,
     pub significance: f64,

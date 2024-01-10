@@ -259,32 +259,45 @@ impl<'de> Deserialize<'de> for CoverageData {
 #[derive(Clone, Debug)]
 pub struct ExperimentFeatureData {
     pub sources: RoaringTreemap,
+    pub assoc_sources: RoaringTreemap,
     pub targets: RoaringTreemap,
 }
 
 const EXPERIMENT_FEATURE_DATA_FIELD_SOURCES: &str = "sources";
+const EXPERIMENT_FEATURE_DATA_FIELD_ASSOC_SOURCES: &str = "assoc_sources";
 const EXPERIMENT_FEATURE_DATA_FIELD_TARGETS: &str = "targets";
 
 impl ExperimentFeatureData {
-    pub fn new(sources: RoaringTreemap, targets: RoaringTreemap) -> Self {
-        ExperimentFeatureData { sources, targets }
+    pub fn new(
+        sources: RoaringTreemap,
+        assoc_sources: RoaringTreemap,
+        targets: RoaringTreemap,
+    ) -> Self {
+        ExperimentFeatureData {
+            sources,
+            assoc_sources,
+            targets,
+        }
     }
 
     pub fn default() -> Self {
         ExperimentFeatureData {
             sources: RoaringTreemap::default(),
+            assoc_sources: RoaringTreemap::default(),
             targets: RoaringTreemap::default(),
         }
     }
 
     pub fn intersection(&mut self, other: &Self) -> &Self {
         self.sources &= &other.sources;
+        self.assoc_sources &= &other.assoc_sources;
         self.targets &= &other.targets;
         self
     }
 
     pub fn union(&mut self, other: &Self) -> &Self {
         self.sources |= &other.sources;
+        self.assoc_sources |= &other.assoc_sources;
         self.targets |= &other.targets;
         self
     }
@@ -307,6 +320,12 @@ impl Serialize for ExperimentFeatureData {
         let mut source_data = vec![];
         let _ = self.sources.serialize_into(&mut source_data);
         state.serialize_field(EXPERIMENT_FEATURE_DATA_FIELD_SOURCES, &source_data)?;
+        let mut assoc_source_data = vec![];
+        let _ = self.assoc_sources.serialize_into(&mut assoc_source_data);
+        state.serialize_field(
+            EXPERIMENT_FEATURE_DATA_FIELD_ASSOC_SOURCES,
+            &assoc_source_data,
+        )?;
         let mut target_data = vec![];
         let _ = self.targets.serialize_into(&mut target_data);
         state.serialize_field(EXPERIMENT_FEATURE_DATA_FIELD_TARGETS, &target_data)?;
@@ -324,6 +343,7 @@ impl<'de> Deserialize<'de> for ExperimentFeatureData {
         #[serde(field_identifier, rename_all = "lowercase")]
         enum Field {
             Sources,
+            Assoc_Sources,
             Targets,
         }
 
@@ -343,13 +363,18 @@ impl<'de> Deserialize<'de> for ExperimentFeatureData {
                 let source_data: Vec<u8> = seq
                     .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(1, &self))?;
+                let assoc_source_data: Vec<u8> = seq
+                    .next_element()?
+                    .ok_or_else(|| de::Error::invalid_length(1, &self))?;
                 let target_data: Vec<u8> = seq
                     .next_element()?
                     .ok_or_else(|| de::Error::invalid_length(1, &self))?;
                 let sources = RoaringTreemap::deserialize_from(&source_data[..]).unwrap();
+                let assoc_sources =
+                    RoaringTreemap::deserialize_from(&assoc_source_data[..]).unwrap();
                 let targets = RoaringTreemap::deserialize_from(&target_data[..]).unwrap();
 
-                Ok(ExperimentFeatureData::new(sources, targets))
+                Ok(ExperimentFeatureData::new(sources, assoc_sources, targets))
             }
 
             fn visit_map<V>(self, mut map: V) -> Result<ExperimentFeatureData, V::Error>
@@ -357,6 +382,7 @@ impl<'de> Deserialize<'de> for ExperimentFeatureData {
                 V: MapAccess<'de>,
             {
                 let mut source_data: Option<Vec<u8>> = None;
+                let mut assoc_source_data: Option<Vec<u8>> = None;
                 let mut target_data: Option<Vec<u8>> = None;
                 while let Some(key) = map.next_key()? {
                     match key {
@@ -367,6 +393,14 @@ impl<'de> Deserialize<'de> for ExperimentFeatureData {
                                 ));
                             }
                             source_data = Some(map.next_value()?);
+                        }
+                        Field::Assoc_Sources => {
+                            if assoc_source_data.is_some() {
+                                return Err(de::Error::duplicate_field(
+                                    EXPERIMENT_FEATURE_DATA_FIELD_ASSOC_SOURCES,
+                                ));
+                            }
+                            assoc_source_data = Some(map.next_value()?);
                         }
                         Field::Targets => {
                             if target_data.is_some() {
@@ -382,18 +416,24 @@ impl<'de> Deserialize<'de> for ExperimentFeatureData {
                 let source_data = source_data.ok_or_else(|| {
                     de::Error::missing_field(EXPERIMENT_FEATURE_DATA_FIELD_SOURCES)
                 })?;
+                let assoc_source_data = assoc_source_data.ok_or_else(|| {
+                    de::Error::missing_field(EXPERIMENT_FEATURE_DATA_FIELD_ASSOC_SOURCES)
+                })?;
                 let target_data = target_data.ok_or_else(|| {
                     de::Error::missing_field(EXPERIMENT_FEATURE_DATA_FIELD_TARGETS)
                 })?;
                 let sources = RoaringTreemap::deserialize_from(&source_data[..]).unwrap();
+                let assoc_sources =
+                    RoaringTreemap::deserialize_from(&assoc_source_data[..]).unwrap();
                 let targets = RoaringTreemap::deserialize_from(&target_data[..]).unwrap();
 
-                Ok(ExperimentFeatureData::new(sources, targets))
+                Ok(ExperimentFeatureData::new(sources, assoc_sources, targets))
             }
         }
 
         const FIELDS: &'static [&'static str] = &[
             EXPERIMENT_FEATURE_DATA_FIELD_SOURCES,
+            EXPERIMENT_FEATURE_DATA_FIELD_ASSOC_SOURCES,
             EXPERIMENT_FEATURE_DATA_FIELD_TARGETS,
         ];
         deserializer.deserialize_struct(
