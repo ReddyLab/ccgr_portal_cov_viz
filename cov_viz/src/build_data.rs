@@ -97,6 +97,7 @@ pub fn build_data(
     let mut nonsignificant_observations: Vec<ObservationData> = Vec::new();
     let mut feature_buckets = FxHashMap::<DbID, BucketLoc>::default();
     let mut source_set = RoaringTreemap::default();
+    let mut assoc_source_set = RoaringTreemap::default();
     let mut target_set = RoaringTreemap::default();
 
     let mut chrom_keys: FxHashMap<&str, u8> = FxHashMap::default();
@@ -145,11 +146,13 @@ pub fn build_data(
         INNER JOIN search_regulatoryeffectobservation_facet_values ON (search_facetvalue.id = search_regulatoryeffectobservation_facet_values.facetvalue_id)
         WHERE search_regulatoryeffectobservation_facet_values.regulatoryeffectobservation_id = ANY($1)"#
     )?;
-    // (re id: DbID, dnafeature id: DbID, numeric facets: Json, chrom name: &str, location: Range(i32))
+    // (re id: DbID, dnafeature id: DbID, numeric facets: Json, chrom name: &str, location: Range(i32), assoc ccre id: DbID, parent assoc ccre id: DbID)
     let re_sources_statement = client.prepare(r#"
-        SELECT (search_regulatoryeffectobservation_sources.regulatoryeffectobservation_id) AS _prefetch_related_val_regulatoryeffectobservation_id, search_dnafeature.id, search_dnafeature.facet_num_values, search_dnafeature.chrom_name, search_dnafeature.location
+        SELECT (search_regulatoryeffectobservation_sources.regulatoryeffectobservation_id) AS _prefetch_related_val_regulatoryeffectobservation_id, search_dnafeature.id, search_dnafeature.facet_num_values, search_dnafeature.chrom_name, search_dnafeature.location, ac.to_dnafeature_id, pac.to_dnafeature_id
         FROM search_dnafeature
         INNER JOIN search_regulatoryeffectobservation_sources ON (search_dnafeature.id = search_regulatoryeffectobservation_sources.dnafeature_id)
+        LEFT OUTER JOIN search_dnafeature_associated_ccres AS ac ON (search_dnafeature.id = ac.from_dnafeature_id)
+        LEFT OUTER JOIN search_dnafeature_associated_ccres AS pac ON (search_dnafeature.parent_id = pac.from_dnafeature_id)
         WHERE search_regulatoryeffectobservation_sources.regulatoryeffectobservation_id = ANY($1)"#
     )?;
     // (re id: DbID, feature assembly id: DbID, chrom name: &str, location: Range(i32), strand: &str)
@@ -252,7 +255,14 @@ pub fn build_data(
     let sources = client.query(&re_sources_statement, &[&reg_effect_id_list])?;
     let mut source_dict: FxHashMap<
         DbID,
-        Vec<(DbID, Option<Json<FxHashMap<&str, f32>>>, &str, Range<i32>)>,
+        Vec<(
+            DbID,
+            Option<Json<FxHashMap<&str, f32>>>,
+            &str,
+            Range<i32>,
+            Option<i64>, // really a DbID
+            Option<i64>, // really a DbID
+        )>,
     > = FxHashMap::default();
     for row in &sources {
         let key = row.get::<usize, i64>(0) as DbID;
@@ -264,6 +274,8 @@ pub fn build_data(
                     row.get::<usize, Option<Json<FxHashMap<&str, f32>>>>(2),
                     row.get::<usize, &str>(3),
                     row.get::<usize, Range<i32>>(4),
+                    row.get::<usize, Option<i64>>(5),
+                    row.get::<usize, Option<i64>>(6),
                 ))
             })
             .or_insert(vec![(
@@ -271,6 +283,8 @@ pub fn build_data(
                 row.get::<usize, Option<Json<FxHashMap<&str, f32>>>>(2),
                 row.get::<usize, &str>(3),
                 row.get::<usize, Range<i32>>(4),
+                row.get::<usize, Option<i64>>(5),
+                row.get::<usize, Option<i64>>(6),
             )]);
     }
 
@@ -327,7 +341,8 @@ pub fn build_data(
         let effect_size = *re_facets.get(FACET_EFFECT_SIZE).unwrap();
         let significance: f64 = (*re_facets.get(FACET_SIGNIFICANCE).unwrap()).into();
 
-        let re_sources = source_dict.get(&(reo_id as DbID)).unwrap();
+        let re_sources = source_dict.get(&(reo_id as DbID));
+        let re_sources = re_sources.unwrap();
 
         let mut source_counter: FxHashSet<BucketLoc> = FxHashSet::default();
 
@@ -359,6 +374,11 @@ pub fn build_data(
             source_counter.insert(bucket_loc);
             feature_buckets.insert(source.0, bucket_loc);
             source_set.insert(source.0);
+            match (source.4, source.5) {
+                (_, Some(y)) => assoc_source_set.insert(y as DbID),
+                (Some(x), _) => assoc_source_set.insert(x as DbID),
+                _ => false,
+            };
         }
 
         let cat_facets = &reg_cat_facets | &source_cat_facets;
@@ -386,11 +406,12 @@ pub fn build_data(
         }
 
         if reg_cat_facets.contains(&nonsignificant_facet_value) {
-            for (sid, _, _, _) in re_sources {
+            for (sid, _, _, _, acid, pacid) in re_sources {
                 nonsignificant_observations.push(ObservationData {
                     reo_id: reo_id as DbID,
                     facet_value_ids: cat_facets.iter().cloned().collect(),
                     source_id: *sid,
+                    assoc_source_id: (pacid.unwrap_or(acid.unwrap_or(0))) as DbID,
                     target_id,
                     effect_size,
                     significance,
@@ -398,11 +419,12 @@ pub fn build_data(
                 });
             }
         } else {
-            for (sid, _, _, _) in re_sources {
+            for (sid, _, _, _, acid, pacid) in re_sources {
                 significant_observations.push(ObservationData {
                     reo_id: reo_id as DbID,
                     facet_value_ids: cat_facets.iter().cloned().collect(),
                     source_id: *sid,
+                    assoc_source_id: (pacid.unwrap_or(acid.unwrap_or(0))) as DbID,
                     target_id,
                     effect_size,
                     significance,
@@ -491,6 +513,7 @@ pub fn build_data(
         },
         ExperimentFeatureData {
             sources: source_set,
+            assoc_sources: assoc_source_set,
             targets: target_set,
         },
     ))
