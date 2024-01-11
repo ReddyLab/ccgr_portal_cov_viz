@@ -178,6 +178,46 @@ fn gen_filtered_data(
     }
 }
 
+fn source_filter<'a>(
+    of: (&'a ObservationData, &ExperimentFeatureData),
+) -> Option<&'a ObservationData> {
+    let (o, f) = of;
+    if f.assoc_sources.contains(o.assoc_source_id) {
+        Some(o)
+    } else {
+        None
+    }
+}
+
+fn target_filter<'a>(
+    of: (&'a ObservationData, &ExperimentFeatureData),
+) -> Option<&'a ObservationData> {
+    let (o, f) = of;
+    if o.target_id.is_some() && f.targets.contains(o.target_id.unwrap()) {
+        Some(o)
+    } else {
+        None
+    }
+}
+
+fn source_target_filter<'a>(
+    of: (&'a ObservationData, &ExperimentFeatureData),
+) -> Option<&'a ObservationData> {
+    let (o, f) = of;
+    if f.assoc_sources.contains(o.assoc_source_id)
+        && o.target_id.is_some()
+        && f.targets.contains(o.target_id.unwrap())
+    {
+        Some(o)
+    } else {
+        None
+    }
+}
+
+fn no_filter<'a>(of: (&'a ObservationData, &ExperimentFeatureData)) -> Option<&'a ObservationData> {
+    Some(of.0)
+}
+
 pub fn filter_coverage_data(
     filters: &Filter,
     data: &CoverageData,
@@ -308,17 +348,19 @@ pub fn filter_coverage_data(
             .chain(data.nonsignificant_observations.par_iter())
     };
 
+    let feature_filter = match filters.set_op_feature {
+        Some(SetOpFeature::Source) => source_filter,
+        Some(SetOpFeature::Target) => target_filter,
+        Some(SetOpFeature::SourceTarget) => source_target_filter,
+        None => no_filter,
+    };
+
     let filtered_observations: Vec<&ObservationData> =
         if skip_cont_facet_check && f_with_selections.is_empty() {
             if let Some(included_features) = included_features {
                 observations
-                    .filter(|o| -> bool {
-                        if let Some(target_id) = o.target_id {
-                            included_features.targets.contains(target_id)
-                        } else {
-                            false
-                        }
-                    })
+                    .map(|o| (o, included_features))
+                    .filter_map(feature_filter)
                     .collect()
             } else {
                 observations.collect()
@@ -345,13 +387,8 @@ pub fn filter_coverage_data(
 
             if let Some(included_features) = included_features {
                 filtered_observations
-                    .filter(|o| -> bool {
-                        if let Some(target_id) = o.target_id {
-                            included_features.targets.contains(target_id)
-                        } else {
-                            false
-                        }
-                    })
+                    .map(|o| (o, included_features))
+                    .filter_map(feature_filter)
                     .collect()
             } else {
                 filtered_observations.collect()

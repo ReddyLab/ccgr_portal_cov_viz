@@ -14,11 +14,19 @@ use cov_viz_ds::{BucketLoc, ChromosomeData, CoverageData, DbID};
 // Don't be afraid to change it if another number becomes more "resonable sounding".
 pub const MIN_SIG: f64 = 1e-100;
 
+#[derive(Clone, Debug)]
+pub enum SetOpFeature {
+    Source,
+    Target,
+    SourceTarget,
+}
+
 #[derive(Debug)]
 pub struct Filter {
     pub chrom: Option<u8>,
     pub categorical_facets: FxHashSet<DbID>,
     pub numeric_intervals: Option<FilterIntervals>,
+    pub set_op_feature: Option<SetOpFeature>,
 }
 
 impl Filter {
@@ -27,6 +35,7 @@ impl Filter {
             chrom: None,
             categorical_facets: FxHashSet::default(),
             numeric_intervals: None,
+            set_op_feature: None,
         }
     }
 
