@@ -9,6 +9,7 @@ pub const FACET_EFFECT_SIZE: &str = "Effect Size";
 pub const FACET_CCRE_CATEGORY: &str = "cCRE Category";
 pub const FACET_CCRE_OVERLAP: &str = "cCRE Overlap";
 pub const FACET_SIGNIFICANCE: &str = "Significance";
+pub const FACET_LOG_SIGNIFICANCE: &str = "Log Significance";
 pub const FACET_RAW_P_VALUE: &str = "Raw p value";
 pub const FACET_GRNA_TYPE: &str = "gRNA Type";
 
@@ -65,6 +66,10 @@ pub fn facet_set() -> FxHashMap<&'static str, FxHashSet<FacetCoverage>> {
     );
     experiment_facets.insert(
         FACET_SIGNIFICANCE,
+        FxHashSet::from_iter([FacetCoverage::Target, FacetCoverage::Source].into_iter()),
+    );
+    experiment_facets.insert(
+        FACET_LOG_SIGNIFICANCE,
         FxHashSet::from_iter([FacetCoverage::Target, FacetCoverage::Source].into_iter()),
     );
     experiment_facets.insert(
