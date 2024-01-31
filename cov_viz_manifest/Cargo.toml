@@ -1,15 +1,15 @@
 [package]
 name = "cov_viz_manifest"
-version = "0.3.3"
+version = "0.3.4"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 bincode = "1.3.3"
-cov_viz_ds = { git = "https://github.com/ReddyLab/ccgr_portal_cov_viz", rev = "d547248852ba69a9ee031734b7a0f0be6d0107de" }
+cov_viz_ds = { git = "https://github.com/ReddyLab/ccgr_portal_cov_viz", rev = "7bc1b8f41296130d9a97c2f493c20e0f7016f637" }
 # cov_viz_ds = { path = "../cov_viz_ds" } # For working with a local copy during development
-exp_viz = { git = "https://github.com/ReddyLab/ccgr_portal_cov_viz", rev = "4a0eda638f2946a5060342598bffdf13a11e8b36" }
+exp_viz = { git = "https://github.com/ReddyLab/ccgr_portal_cov_viz", rev = "c553fefaf228acef2386a6fbdcf830207380a727" }
 # exp_viz = { path = "../exp_viz" }                      # For working with a local copy during development
 rustc-hash = "1.1.0"
 serde = { version = "1.0.137", features = ["derive"] }
