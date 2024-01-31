@@ -10,11 +10,9 @@ use crate::options::Options;
 
 use cov_viz_ds::facets::{
     facet_set, FACET_CCRE_CATEGORY, FACET_CCRE_OVERLAP, FACET_DIRECTION, FACET_EFFECT_SIZE,
-    FACET_GRNA_TYPE, FACET_SIGNIFICANCE, FACET_TYPE_CATEGORICAL,
+    FACET_GRNA_TYPE, FACET_LOG_SIGNIFICANCE, FACET_SIGNIFICANCE, FACET_TYPE_CATEGORICAL,
 };
 use cov_viz_ds::*;
-
-pub const MIN_SIG: f64 = 1e-100;
 
 const GRCH38: [(&str, i32, u8); 25] = [
     ("1", 248956422, 0),
@@ -340,6 +338,7 @@ pub fn build_data(
         let re_facets = reg_effect_num_facets.get(&(reo_id as DbID)).unwrap();
         let effect_size = *re_facets.get(FACET_EFFECT_SIZE).unwrap();
         let significance: f64 = (*re_facets.get(FACET_SIGNIFICANCE).unwrap()).into();
+        let log_significance: f64 = (*re_facets.get(FACET_LOG_SIGNIFICANCE).unwrap()).into();
 
         let re_sources = source_dict.get(&(reo_id as DbID));
         let re_sources = re_sources.unwrap();
@@ -415,7 +414,7 @@ pub fn build_data(
                     target_id,
                     effect_size,
                     significance,
-                    neg_log_significance: -significance.max(MIN_SIG).log10(),
+                    neg_log_significance: log_significance,
                 });
             }
         } else {
@@ -428,7 +427,7 @@ pub fn build_data(
                     target_id,
                     effect_size,
                     significance,
-                    neg_log_significance: -significance.max(MIN_SIG).log10(),
+                    neg_log_significance: log_significance,
                 });
             }
         }
