@@ -210,10 +210,10 @@ pub fn build_data(
     let reg_effects_chromo_statement = client.prepare(r#"
         SELECT search_regulatoryeffectobservation.id, search_regulatoryeffectobservation.facet_num_values
         FROM search_regulatoryeffectobservation
-        INNER JOIN search_regulatoryeffectobservation_sources as re_s ON (search_regulatoryeffectobservation.id = re_s.regulatoryeffectobservation_id)
-        INNER JOIN search_dnafeature as sf ON (sf.id = re_s.dnafeature_id)
-        INNER JOIN search_regulatoryeffectobservation_targets as re_t ON (search_regulatoryeffectobservation.id = re_t.regulatoryeffectobservation_id)
-        INNER JOIN search_dnafeature as tf ON (tf.id = re_t.dnafeature_id)
+        LEFT OUTER JOIN search_regulatoryeffectobservation_sources as re_s ON (search_regulatoryeffectobservation.id = re_s.regulatoryeffectobservation_id)
+        LEFT OUTER JOIN search_dnafeature as sf ON (sf.id = re_s.dnafeature_id)
+        LEFT OUTER JOIN search_regulatoryeffectobservation_targets as re_t ON (search_regulatoryeffectobservation.id = re_t.regulatoryeffectobservation_id)
+        LEFT OUTER JOIN search_dnafeature as tf ON (tf.id = re_t.dnafeature_id)
         WHERE search_regulatoryeffectobservation.analysis_accession_id = $1 and (sf.chrom_name = $2 or tf.chrom_name = $2)"#
     )?;
     let reg_effects = match &options.chromo {
