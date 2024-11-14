@@ -223,6 +223,23 @@ pub fn filter_coverage_data(
     data: &CoverageData,
     included_features: Option<&ExperimentFeatureData>,
 ) -> FilteredData {
+    // Don't do any filtering if there is nothing here!
+    // This can happen when "unioning" multiple experiments together and the user zooms in on
+    // a chromosome that one of the experiments doesn't have any sources or targets on.
+    if data.significant_observations.is_empty() && data.nonsignificant_observations.is_empty() {
+        return FilteredData {
+            chromosomes: Vec::new(),
+            bucket_size: data.bucket_size,
+            numeric_intervals: FilterIntervals {
+                effect: (0.0, 0.0),
+                sig: (0.0, 0.0),
+            },
+            reo_count: 0,
+            sources: RoaringTreemap::default(),
+            targets: RoaringTreemap::default(),
+        };
+    }
+
     let bucket_size = data.bucket_size;
     let feature_buckets = &data.feature_buckets;
 
