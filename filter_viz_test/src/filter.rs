@@ -147,8 +147,8 @@ fn gen_filtered_data(
                     acc
                 },
             ),
-            max_log10_sig: bucket_data.max_sig,
-            max_abs_effect: if bucket_data.max_effect > bucket_data.min_effect.abs() {
+            log10_sig: bucket_data.max_sig,
+            effect: if bucket_data.max_effect > bucket_data.min_effect.abs() {
                 bucket_data.max_effect
             } else {
                 bucket_data.min_effect

@@ -60,8 +60,15 @@ pub struct FilteredBucket {
     pub start: u32,
     pub count: usize,
     pub associated_buckets: Vec<u32>,
-    pub max_log10_sig: f64,  // Lower significance values are more significant
-    pub max_abs_effect: f32, // largest absolute effect size
+    // The relationship between these two values depends on the CoverageType.
+    // Count: log10_sig is the largest significance in the bucket and effect is the
+    //        effect with the largest absolute value
+    // Significance: log10_sig is the largest significance in the bucket and effect
+    //        is the effect size associated with that significance value
+    // EffectSize: effect is the effect with the largest absolute value and log10_sig
+    //        is the significance associated with that effect.
+    pub log10_sig: f64,
+    pub effect: f32,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]

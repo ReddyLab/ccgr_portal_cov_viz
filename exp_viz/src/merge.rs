@@ -85,17 +85,15 @@ fn merge_chromosomes(
                             count: filtered_chrom.source_intervals[j].count
                                 + new_chromosome.source_intervals[i].count,
                             associated_buckets: assoc_buckets,
-                            max_log10_sig: filtered_chrom.source_intervals[j]
-                                .max_log10_sig
-                                .max(new_chromosome.source_intervals[i].max_log10_sig),
-                            max_abs_effect: if filtered_chrom.source_intervals[j]
-                                .max_abs_effect
-                                .abs()
-                                > new_chromosome.source_intervals[i].max_abs_effect.abs()
+                            log10_sig: filtered_chrom.source_intervals[j]
+                                .log10_sig
+                                .max(new_chromosome.source_intervals[i].log10_sig),
+                            effect: if filtered_chrom.source_intervals[j].effect.abs()
+                                > new_chromosome.source_intervals[i].effect.abs()
                             {
-                                filtered_chrom.source_intervals[j].max_abs_effect
+                                filtered_chrom.source_intervals[j].effect
                             } else {
-                                new_chromosome.source_intervals[i].max_abs_effect
+                                new_chromosome.source_intervals[i].effect
                             },
                         });
                         i += 1;
@@ -148,17 +146,15 @@ fn merge_chromosomes(
                             count: filtered_chrom.target_intervals[j].count
                                 + new_chromosome.target_intervals[i].count,
                             associated_buckets: assoc_buckets,
-                            max_log10_sig: filtered_chrom.target_intervals[j]
-                                .max_log10_sig
-                                .max(new_chromosome.target_intervals[i].max_log10_sig),
-                            max_abs_effect: if filtered_chrom.target_intervals[j]
-                                .max_abs_effect
-                                .abs()
-                                > new_chromosome.target_intervals[i].max_abs_effect.abs()
+                            log10_sig: filtered_chrom.target_intervals[j]
+                                .log10_sig
+                                .max(new_chromosome.target_intervals[i].log10_sig),
+                            effect: if filtered_chrom.target_intervals[j].effect.abs()
+                                > new_chromosome.target_intervals[i].effect.abs()
                             {
-                                filtered_chrom.target_intervals[j].max_abs_effect
+                                filtered_chrom.target_intervals[j].effect
                             } else {
-                                new_chromosome.target_intervals[i].max_abs_effect
+                                new_chromosome.target_intervals[i].effect
                             },
                         });
                         i += 1;

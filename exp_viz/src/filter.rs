@@ -11,8 +11,11 @@ use cov_viz_ds::{
 struct BucketData {
     feature_ids: RoaringTreemap,
     associated_features: RoaringTreemap,
+    effect: f32,
+    sig: f64,
     min_effect: f32,
     max_effect: f32,
+    abs_max_effect: f32,
     min_sig: f64,
     max_sig: f64,
 }
@@ -32,6 +35,7 @@ fn is_disjoint(a: &Vec<DbID>, b: &Vec<DbID>) -> bool {
 fn add_data_to_bucket(
     id: DbID,
     associated_feature: Option<DbID>,
+    coverage_type: CoverageType,
     obs_sig: f64,
     effect_size: f32,
     buckets: &mut FxHashMap<BucketLoc, BucketData>,
@@ -49,8 +53,30 @@ fn add_data_to_bucket(
             if let Some(af) = associated_feature {
                 bucket_data.associated_features.insert(af);
             }
+            let abs_effect_size = effect_size.abs();
+            match coverage_type {
+                CoverageType::Count => {
+                    if bucket_data.abs_max_effect < abs_effect_size {
+                        bucket_data.effect = effect_size;
+                    }
+                    bucket_data.sig = obs_sig.max(bucket_data.sig);
+                }
+                CoverageType::EffectSize => {
+                    if bucket_data.abs_max_effect < abs_effect_size {
+                        bucket_data.sig = obs_sig;
+                        bucket_data.effect = effect_size;
+                    }
+                }
+                CoverageType::Significance => {
+                    if bucket_data.sig < obs_sig {
+                        bucket_data.sig = obs_sig;
+                        bucket_data.effect = effect_size;
+                    }
+                }
+            }
             bucket_data.min_effect = effect_size.min(bucket_data.min_effect);
             bucket_data.max_effect = effect_size.max(bucket_data.max_effect);
+            bucket_data.abs_max_effect = bucket_data.abs_max_effect.max(abs_effect_size);
 
             bucket_data.min_sig = obs_sig.min(bucket_data.min_sig);
             bucket_data.max_sig = obs_sig.max(bucket_data.max_sig);
@@ -62,8 +88,11 @@ fn add_data_to_bucket(
             } else {
                 RoaringTreemap::new()
             },
+            effect: effect_size,
+            sig: obs_sig,
             min_effect: effect_size,
             max_effect: effect_size,
+            abs_max_effect: effect_size.abs(),
             min_sig: obs_sig,
             max_sig: obs_sig,
         });
@@ -74,10 +103,12 @@ fn update_buckets(
     source_buckets: &mut FxHashMap<BucketLoc, BucketData>,
     target_buckets: &mut FxHashMap<BucketLoc, BucketData>,
     features: &FxHashMap<DbID, BucketLoc>,
+    coverage_type: CoverageType,
 ) {
     add_data_to_bucket(
         observation.source_id,
         observation.target_id,
+        coverage_type,
         observation.neg_log_significance,
         observation.effect_size,
         source_buckets,
@@ -88,6 +119,7 @@ fn update_buckets(
         add_data_to_bucket(
             id,
             Some(observation.source_id),
+            coverage_type,
             observation.neg_log_significance,
             observation.effect_size,
             target_buckets,
@@ -168,12 +200,8 @@ fn gen_filtered_data(
                     acc.push(bucket.idx);
                     acc
                 }),
-            max_log10_sig: bucket_data.max_sig,
-            max_abs_effect: if bucket_data.max_effect > bucket_data.min_effect.abs() {
-                bucket_data.max_effect
-            } else {
-                bucket_data.min_effect
-            },
+            log10_sig: bucket_data.sig,
+            effect: bucket_data.effect,
         })
     }
 }
@@ -445,6 +473,7 @@ pub fn filter_coverage_data(
                     &mut source_buckets,
                     &mut target_buckets,
                     &feature_buckets,
+                    filters.coverage_type,
                 );
             }
 

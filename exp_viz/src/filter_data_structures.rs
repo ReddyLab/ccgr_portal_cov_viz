@@ -21,12 +21,20 @@ pub enum SetOpFeature {
     SourceTarget,
 }
 
+#[derive(Clone, Copy, Debug)]
+pub enum CoverageType {
+    Count,
+    Significance,
+    EffectSize,
+}
+
 #[derive(Debug)]
 pub struct Filter {
     pub chrom: Option<u8>,
     pub categorical_facets: FxHashSet<DbID>,
     pub numeric_intervals: Option<FilterIntervals>,
     pub set_op_feature: Option<SetOpFeature>,
+    pub coverage_type: CoverageType,
 }
 
 impl Filter {
@@ -36,6 +44,7 @@ impl Filter {
             categorical_facets: FxHashSet::default(),
             numeric_intervals: None,
             set_op_feature: None,
+            coverage_type: CoverageType::Count,
         }
     }
 
@@ -71,8 +80,15 @@ pub struct FilteredBucket {
     pub start: u32,
     pub count: usize,
     pub associated_buckets: Vec<u32>,
-    pub max_log10_sig: f64,  // Lower significance values are more significant
-    pub max_abs_effect: f32, // largest absolute effect size
+    // The relationship between these two values depends on the CoverageType.
+    // Count: log10_sig is the largest significance in the bucket and effect is the
+    //        effect with the largest absolute value
+    // Significance: log10_sig is the largest significance in the bucket and effect
+    //        is the effect size associated with that significance value
+    // EffectSize: effect is the effect with the largest absolute value and log10_sig
+    //        is the significance associated with that effect.
+    pub log10_sig: f64,
+    pub effect: f32,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
